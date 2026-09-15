@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: consumer-kotlin
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+  cloud:
+    function:
+      definition: eventConsumer
+    stream:
+      bindings:
+        eventConsumer-in-0:
+          destination: platform.events
+          group: q.consumer-kotlin
+      rabbit:
+        bindings:
+          eventConsumer-in-0:
+            consumer:
+              exchange-type: topic
+              # Without this the queue would be named destination.group, i.e. platform.events.q.consumer-kotlin.
+              queue-name-group-only: true
+              # Never redeclare platform.events here: the broker already has it with an "alternate-exchange" argument
+              # (see rabbitmq/init-alternate-exchange.sh), and a redeclaration without that argument is rejected as inequivalent.
+              declare-exchange: false
+              # Spring Cloud Stream's RabbitMQ binder defaults binding-routing-key to "#" (catch-all) when it is not set.
+              binding-routing-key: v1.user.changed,v1.asset.changed.video
+              binding-routing-key-delimiter: ","
+
+logging:
+  level:
+    com.clevertechware.consumerkotlin: INFO

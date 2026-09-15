@@ -1,0 +1,26 @@
+services:
+  rabbitmq:
+    image: rabbitmq:4.1-management
+    container_name: routing-keys-rabbitmq
+    ports:
+      - "5672:5672"   # AMQP
+      - "15672:15672" # management UI, http://localhost:15672 (guest/guest)
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # One-shot: declares the platform.events.unrouted alternate exchange, its
+  # queue and the attachment to platform.events once the broker is healthy.
+  # See rabbitmq/init-alternate-exchange.sh and the README section "Ce que
+  # donne un message sans binding correspondant".
+  rabbitmq-init:
+    image: curlimages/curl:8.11.1
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - ./rabbitmq/init-alternate-exchange.sh:/init-alternate-exchange.sh:ro
+    entrypoint: ["/bin/sh", "/init-alternate-exchange.sh"]
+    restart: "no"

@@ -1,0 +1,6 @@
+target/
+*.class
+consumer-kotlin/build/
+consumer-kotlin/.gradle/
+consumer-go/consumer-go
+.idea
